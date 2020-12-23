@@ -1,11 +1,12 @@
 require 'rails_helper'
 
 describe 'Books API', type: :request do
+  let(:first_author) { FactoryBot.create(:author, first_name: 'Maulana', last_name: 'Haikal', age: 22)}
+  let(:second_author) { FactoryBot.create(:author, first_name: 'Waluh', last_name: 'Bajarang', age: 20)}
   describe 'GET /books' do
     before do
-      author = FactoryBot.create(:author, first_name: 'Maulana', last_name: 'Haikal', age: 22)
-      FactoryBot.create(:book, title: '1984', author_id: author.id)
-      FactoryBot.create(:book, title: 'The Time Machine', author_id: author.id)
+      FactoryBot.create(:book, title: '1984', author: first_author)
+      FactoryBot.create(:book, title: 'The Time Machine', author: second_author)
     end
 
     it 'returns all books' do
@@ -15,7 +16,23 @@ describe 'Books API', type: :request do
       #check api return successully
       expect(response).to have_http_status(:success)
       # check the response body has 2 object
-      expect(JSON.parse(response.body).size).to eq(2)
+      expect(response_body.size).to eq(2)
+      # check created book with it relation (author)
+      expect(response_body).to eq(
+        [
+          {
+            'id' => 1,
+            'title' => '1984',
+            'author_name' => 'Maulana Haikal',
+            'author_age' => 22,
+          }, {
+            'id' => 2,
+            'title' => 'The Time Machine',
+            'author_name' => 'Waluh Bajarang',
+            'author_age' => 20,
+          }
+        ]
+      )
     end
   end
 
@@ -30,14 +47,19 @@ describe 'Books API', type: :request do
 
       expect(response).to have_http_status(:created)
       expect(Author.count).to eq(1)
+      expect(JSON.parse(response.body)).to eq(
+        {
+          'id' => 1,
+          'title' => 'MERN stack',
+          'author_name' => 'Maulana Haikal',
+          'author_age' => 22,
+        }
+      )
     end
   end
 
   describe 'DELETE /books/:id' do
-    let!(:book) {
-      author = FactoryBot.create(:author, first_name: 'Maulana', last_name: 'Haikal', age: 22)
-      FactoryBot.create(:book, title: '1984', author_id: author.id)
-    }
+    let!(:book) { FactoryBot.create(:book, title: '1984', author: first_author) }
     it 'deletes a book' do
       expect {
         delete "/api/v1/books/#{book.id}"
