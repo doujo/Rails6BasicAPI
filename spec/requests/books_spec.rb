@@ -34,6 +34,39 @@ describe 'Books API', type: :request do
         ]
       )
     end
+
+    it 'returns a subset of books based on limit' do
+      get '/api/v1/books', params: { limit: 1 }
+
+      expect(response).to have_http_status(:success)
+      expect(response_body.size).to eq(1)
+      expect(response_body).to eq(
+        [
+          {
+            'id' => 1,
+            'title' => '1984',
+            'author_name' => 'Maulana Haikal',
+            'author_age' => 22
+          }
+        ]
+      )
+    end
+
+    it 'return a subset of books based on limit and offset' do
+      get '/api/v1/books', params: { limit: 1, offset: 1 }
+      expect(response).to have_http_status(:success)
+      expect(response_body.size).to eq(1)
+      expect(response_body).to eq(
+        [
+          {
+            'id' => 2,
+            'title' => 'The Time Machine',
+            'author_name' => 'Waluh Bajarang',
+            'author_age' => 20,
+          }
+        ]
+      )
+    end
   end
 
   describe 'POST /books' do
@@ -47,7 +80,7 @@ describe 'Books API', type: :request do
 
       expect(response).to have_http_status(:created)
       expect(Author.count).to eq(1)
-      expect(JSON.parse(response.body)).to eq(
+      expect(response_body).to eq(
         {
           'id' => 1,
           'title' => 'MERN stack',
@@ -68,4 +101,5 @@ describe 'Books API', type: :request do
       expect(response).to have_http_status(:no_content)
     end
   end
+
 end
